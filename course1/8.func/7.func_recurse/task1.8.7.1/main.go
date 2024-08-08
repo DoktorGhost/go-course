@@ -3,7 +3,7 @@ package main
 import "fmt"
 
 func Factorial(n int) int {
-	if n == 1 {
+	if n == 0 {
 		return 1
 	} else {
 		return n * Factorial(n-1)
