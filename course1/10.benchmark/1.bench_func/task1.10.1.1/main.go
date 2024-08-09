@@ -10,3 +10,13 @@ func Fibonacci(n int) int {
 	}
 	return b
 }
+
+func FibonacciRecurs(n int) int {
+	if n == 0 {
+		return 0
+	}
+	if n == 1 {
+		return 1
+	}
+	return FibonacciRecurs(n-1) + FibonacciRecurs(n-2)
+}
