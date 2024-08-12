@@ -48,13 +48,6 @@ func TestFibonacciRecurs(t *testing.T) {
 	}
 }
 
-func BenchmarkFibonacciRecurse(b *testing.B) {
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_ = FibonacciRecurs(10)
-	}
-}
-
 func TestFibonacci(t *testing.T) {
 	tests := []struct {
 		name string
@@ -101,9 +94,44 @@ func TestFibonacci(t *testing.T) {
 	}
 }
 
-func BenchmarkFibonacci(b *testing.B) {
+func BenchmarkFibonacciRecurse10(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = FibonacciRecurs(10)
+	}
+}
+
+func BenchmarkFibonacci10(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = Fibonacci(10)
+	}
+}
+
+func BenchmarkFibonacciRecurse15(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = FibonacciRecurs(15)
+	}
+}
+
+func BenchmarkFibonacci15(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = Fibonacci(15)
+	}
+}
+
+func BenchmarkFibonacciRecurse20(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = FibonacciRecurs(20)
+	}
+}
+
+func BenchmarkFibonacci20(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = Fibonacci(20)
 	}
 }
