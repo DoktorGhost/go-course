@@ -248,42 +248,47 @@ func (d *DoubleLinkedList) DeleteCurrent() error {
 // Index получение индекса текущего элемента
 func (d *DoubleLinkedList) Index() (int, error) {
 	if d.curr == nil {
-		return 0, errors.New("нет текущего элемента")
+		return -1, errors.New("нет текущего элемента")
 	}
+
 	if d.curr == d.head {
-		return 1, nil
+		return 0, nil
 	}
 	if d.curr == d.tail {
-		return d.len, nil
+		return d.len - 1, nil
 	}
 
 	node := d.head
-	idx := 1
+	idx := 0
 
-	for i := 0; i < d.len; i++ {
-		idx++
-		if node.next == d.curr {
+	for node != nil {
+		if node == d.curr {
 			return idx, nil
 		}
+		node = node.next
+		idx++
 	}
 
-	return 0, errors.New("не найден индекс текущего элемента")
+	return -1, errors.New("не найден индекс текущего элемента")
 }
 
 func (d *DoubleLinkedList) GetByIndex(n int) (*Node, error) {
-	if n > d.len {
+	if n < 0 {
 		return nil, errors.New("индекс выходит за границы списка")
 	}
-	if n == 1 {
+	if n >= d.len {
+		return nil, errors.New("индекс выходит за границы списка")
+	}
+	if n == 0 {
 		return d.head, nil
 	}
-	if n == d.len {
-		return d.head, nil
+	if n == d.len-1 {
+		return d.tail, nil
 	}
 	node := d.head
-	idx := 1
+	idx := 0
 
-	for i := 1; i < n; i++ {
+	for i := 0; i < n; i++ {
 		idx++
 		node = node.next
 	}
@@ -292,21 +297,39 @@ func (d *DoubleLinkedList) GetByIndex(n int) (*Node, error) {
 
 // Pop Операция Pop
 func (d *DoubleLinkedList) Pop() *Node {
+	if d.tail == nil {
+		return nil
+	}
 	tail := d.tail
-	newTail := d.tail.prev
-	newTail.next = nil
-	d.tail = newTail
+	if d.len == 1 {
+		d.head = nil
+		d.tail = nil
+	} else {
+		newTail := d.tail.prev
+		newTail.next = nil
+		d.tail = newTail
+	}
 	d.len--
-
 	return tail
 }
 
 // Shift операция shift
 func (d *DoubleLinkedList) Shift() *Node {
+	if d.head == nil { // если список пуст
+		return nil
+	}
+
 	head := d.head
-	newHead := d.head.next
-	newHead.prev = nil
-	d.head = newHead
+
+	if d.len == 1 { // если в списке один элемент
+		d.head = nil
+		d.tail = nil
+	} else {
+		newHead := d.head.next
+		newHead.prev = nil
+		d.head = newHead
+	}
+
 	d.len--
 	return head
 }
@@ -314,7 +337,7 @@ func (d *DoubleLinkedList) Shift() *Node {
 // SearchUUID поиск коммита по uuid
 func (d *DoubleLinkedList) SearchUUID(uuID string) *Node {
 	node := d.head
-	for i := 0; i < d.len; i++ {
+	for node != nil {
 		if node.data.UUID == uuID {
 			return node
 		}
@@ -325,7 +348,7 @@ func (d *DoubleLinkedList) SearchUUID(uuID string) *Node {
 
 func (d *DoubleLinkedList) Search(message string) *Node {
 	node := d.head
-	for i := 0; i < d.len; i++ {
+	for node != nil {
 		if node.data.Message == message {
 			return node
 		}
@@ -336,22 +359,39 @@ func (d *DoubleLinkedList) Search(message string) *Node {
 
 // Reverse возвращает перевернутый список
 func (d *DoubleLinkedList) Reverse() *DoubleLinkedList {
-	head := d.head
-	tail := d.tail
+	if d.head == nil {
+		return &DoubleLinkedList{}
+	}
 
-	reverseDoubleLinkedList := &DoubleLinkedList{}
+	reversed := &DoubleLinkedList{}
+	node := d.head
 
-	reverseDoubleLinkedList.head = tail
-	reverseDoubleLinkedList.tail = head
-
-	node := reverseDoubleLinkedList.head
-
-	for i := 0; i < d.len; i++ {
-		node.next, node.prev = node.prev, node.next
+	for node != nil {
+		newNode := &Node{
+			data: node.data,
+			next: reversed.head,
+			prev: nil,
+		}
+		if reversed.head != nil {
+			reversed.head.prev = newNode
+		}
+		reversed.head = newNode
+		if reversed.tail == nil {
+			reversed.tail = newNode
+		}
 		node = node.next
 	}
 
-	return reverseDoubleLinkedList
+	reversed.tail = reversed.head
+	for reversed.tail != nil && reversed.tail.next != nil {
+		reversed.tail = reversed.tail.next
+	}
+
+	if reversed.head != nil {
+		reversed.head.prev = nil
+	}
+
+	return reversed
 }
 
 // сортировка

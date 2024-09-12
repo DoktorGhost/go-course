@@ -926,3 +926,496 @@ func TestDoubleLinkedList_DeleteCurrent(t *testing.T) {
 		})
 	}
 }
+
+func TestDoubleLinkedList_Index(t *testing.T) {
+	tests := []struct {
+		name    string
+		commits []Commit
+		current int
+		want    int
+		err     bool
+	}{
+		{
+			name:    "пустой список",
+			commits: []Commit{},
+			current: 0,
+			want:    -1,
+			err:     true,
+		},
+		{
+			name: "головной элемент",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+				{Message: "commit 2", UUID: "uuid2", Date: "2021-01-02"},
+			},
+			current: 1,
+			want:    1,
+			err:     false,
+		},
+		{
+			name: "хвостовой элемент",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+				{Message: "commit 2", UUID: "uuid2", Date: "2021-01-02"},
+				{Message: "commit 3", UUID: "uuid3", Date: "2021-01-03"},
+				{Message: "commit 4", UUID: "uuid4", Date: "2021-01-04"},
+			},
+			current: 3,
+			want:    3,
+			err:     false,
+		},
+		{
+			name: "средний элемент",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+				{Message: "commit 2", UUID: "uuid2", Date: "2021-01-02"},
+				{Message: "commit 3", UUID: "uuid3", Date: "2021-01-03"},
+			},
+			current: 1,
+			want:    1,
+			err:     false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := &DoubleLinkedList{}
+			d.Init(tt.commits)
+
+			if tt.current > 0 && tt.current <= d.len {
+				err := d.SetCurrent(tt.current)
+				if err != nil {
+					t.Fatalf("ошибка при установке текущего элемента: %v", err)
+				}
+			}
+
+			got, err := d.Index()
+			if (err != nil) != tt.err {
+				t.Errorf("Index() ошибка = %v, ожидалось %v", err, tt.err)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("Index() = %v, ожидалось %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDoubleLinkedList_GetByIndex(t *testing.T) {
+	tests := []struct {
+		name    string
+		commits []Commit
+		index   int
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "индекс выходит за пределы (слишком большой)",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+				{Message: "commit 2", UUID: "uuid2", Date: "2021-01-02"},
+			},
+			index:   3,
+			wantErr: true,
+		},
+		{
+			name: "индекс выходит за пределы (слишком маленький)",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+				{Message: "commit 2", UUID: "uuid2", Date: "2021-01-02"},
+			},
+			index:   -1,
+			wantErr: true,
+		},
+		{
+			name: "получить головной элемент",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+				{Message: "commit 2", UUID: "uuid2", Date: "2021-01-02"},
+			},
+			index:   0,
+			want:    "uuid1",
+			wantErr: false,
+		},
+		{
+			name: "получить хвостовой элемент",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+				{Message: "commit 2", UUID: "uuid2", Date: "2021-01-02"},
+			},
+			index:   1,
+			want:    "uuid2",
+			wantErr: false,
+		},
+		{
+			name: "получить средний элемент",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+				{Message: "commit 2", UUID: "uuid2", Date: "2021-01-02"},
+				{Message: "commit 3", UUID: "uuid3", Date: "2021-01-03"},
+			},
+			index:   1,
+			want:    "uuid2",
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := &DoubleLinkedList{}
+			d.Init(tt.commits)
+
+			node, err := d.GetByIndex(tt.index)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetByIndex() ошибка = %v, ожидалось %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && node.data.UUID != tt.want {
+				t.Errorf("GetByIndex() = %v, ожидалось %v", node.data.UUID, tt.want)
+			}
+		})
+	}
+}
+
+func TestDoubleLinkedList_Pop(t *testing.T) {
+	tests := []struct {
+		name        string
+		commits     []Commit
+		wantUUID    string
+		wantLen     int
+		wantNewTail string
+	}{
+		{
+			name:        "удаление из пустого списка",
+			commits:     []Commit{},
+			wantUUID:    "",
+			wantLen:     0,
+			wantNewTail: "",
+		},
+		{
+			name: "удаление единственного элемента",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+			},
+			wantUUID:    "uuid1",
+			wantLen:     0,
+			wantNewTail: "",
+		},
+		{
+			name: "удаление хвостового элемента",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+				{Message: "commit 2", UUID: "uuid2", Date: "2021-01-02"},
+			},
+			wantUUID:    "uuid2",
+			wantLen:     1,
+			wantNewTail: "uuid1",
+		},
+		{
+			name: "удаление из списка с несколькими элементами",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+				{Message: "commit 2", UUID: "uuid2", Date: "2021-01-02"},
+				{Message: "commit 3", UUID: "uuid3", Date: "2021-01-03"},
+			},
+			wantUUID:    "uuid3",
+			wantLen:     2,
+			wantNewTail: "uuid2",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := &DoubleLinkedList{}
+			d.Init(tt.commits)
+
+			poppedNode := d.Pop()
+			if (poppedNode == nil && tt.wantUUID != "") || (poppedNode != nil && poppedNode.data.UUID != tt.wantUUID) {
+				t.Errorf("Pop() = %v, ожидалось %v", poppedNode, tt.wantUUID)
+			}
+
+			if d.len != tt.wantLen {
+				t.Errorf("Длина списка после Pop() = %v, ожидалось %v", d.len, tt.wantLen)
+			}
+
+			if d.tail != nil && d.tail.data.UUID != tt.wantNewTail {
+				t.Errorf("Новый хвост = %v, ожидалось %v", d.tail.data.UUID, tt.wantNewTail)
+			}
+
+			if d.tail == nil && tt.wantNewTail != "" {
+				t.Errorf("Новый хвост = nil, ожидалось %v", tt.wantNewTail)
+			}
+		})
+	}
+}
+
+func TestDoubleLinkedList_Shift(t *testing.T) {
+	tests := []struct {
+		name        string
+		commits     []Commit
+		wantUUID    string
+		wantLen     int
+		wantNewHead string
+	}{
+		{
+			name:        "удаление из пустого списка",
+			commits:     []Commit{},
+			wantUUID:    "",
+			wantLen:     0,
+			wantNewHead: "",
+		},
+		{
+			name: "удаление единственного элемента",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+			},
+			wantUUID:    "uuid1",
+			wantLen:     0,
+			wantNewHead: "",
+		},
+		{
+			name: "удаление головного элемента",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+				{Message: "commit 2", UUID: "uuid2", Date: "2021-01-02"},
+			},
+			wantUUID:    "uuid1",
+			wantLen:     1,
+			wantNewHead: "uuid2",
+		},
+		{
+			name: "удаление из списка с несколькими элементами",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+				{Message: "commit 2", UUID: "uuid2", Date: "2021-01-02"},
+				{Message: "commit 3", UUID: "uuid3", Date: "2021-01-03"},
+			},
+			wantUUID:    "uuid1",
+			wantLen:     2,
+			wantNewHead: "uuid2",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := &DoubleLinkedList{}
+			d.Init(tt.commits)
+
+			shiftedNode := d.Shift()
+			if (shiftedNode == nil && tt.wantUUID != "") || (shiftedNode != nil && shiftedNode.data.UUID != tt.wantUUID) {
+				t.Errorf("Shift() = %v, ожидалось %v", shiftedNode, tt.wantUUID)
+			}
+
+			if d.len != tt.wantLen {
+				t.Errorf("Длина списка после Shift() = %v, ожидалось %v", d.len, tt.wantLen)
+			}
+
+			if d.head != nil && d.head.data.UUID != tt.wantNewHead {
+				t.Errorf("Новая голова = %v, ожидалось %v", d.head.data.UUID, tt.wantNewHead)
+			}
+
+			if d.head == nil && tt.wantNewHead != "" {
+				t.Errorf("Новая голова = nil, ожидалось %v", tt.wantNewHead)
+			}
+		})
+	}
+}
+
+func TestDoubleLinkedList_SearchUUID(t *testing.T) {
+	tests := []struct {
+		name    string
+		commits []Commit
+		uuID    string
+		want    string
+	}{
+		{
+			name:    "поиск в пустом списке",
+			commits: []Commit{},
+			uuID:    "uuid1",
+			want:    "",
+		},
+		{
+			name: "поиск существующего элемента",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+				{Message: "commit 2", UUID: "uuid2", Date: "2021-01-02"},
+				{Message: "commit 3", UUID: "uuid3", Date: "2021-01-03"},
+			},
+			uuID: "uuid2",
+			want: "uuid2",
+		},
+		{
+			name: "поиск несуществующего элемента",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+				{Message: "commit 2", UUID: "uuid2", Date: "2021-01-02"},
+				{Message: "commit 3", UUID: "uuid3", Date: "2021-01-03"},
+			},
+			uuID: "uuid4",
+			want: "",
+		},
+		{
+			name: "поиск элемента в начале списка",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+				{Message: "commit 2", UUID: "uuid2", Date: "2021-01-02"},
+				{Message: "commit 3", UUID: "uuid3", Date: "2021-01-03"},
+			},
+			uuID: "uuid1",
+			want: "uuid1",
+		},
+		{
+			name: "поиск элемента в конце списка",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+				{Message: "commit 2", UUID: "uuid2", Date: "2021-01-02"},
+				{Message: "commit 3", UUID: "uuid3", Date: "2021-01-03"},
+			},
+			uuID: "uuid3",
+			want: "uuid3",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := &DoubleLinkedList{}
+			d.Init(tt.commits)
+
+			result := d.SearchUUID(tt.uuID)
+			if result == nil && tt.want != "" {
+				t.Errorf("SearchUUID() = nil, ожидалось %v", tt.want)
+			}
+			if result != nil && result.data.UUID != tt.want {
+				t.Errorf("SearchUUID() = %v, ожидалось %v", result.data.UUID, tt.want)
+			}
+		})
+	}
+}
+
+func TestDoubleLinkedList_Search(t *testing.T) {
+	tests := []struct {
+		name    string
+		commits []Commit
+		message string
+		want    string
+	}{
+		{
+			name:    "поиск в пустом списке",
+			commits: []Commit{},
+			message: "test message",
+			want:    "",
+		},
+		{
+			name: "поиск существующего элемента",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+				{Message: "commit 2", UUID: "uuid2", Date: "2021-01-02"},
+				{Message: "commit 3", UUID: "uuid3", Date: "2021-01-03"},
+			},
+			message: "commit 2",
+			want:    "commit 2",
+		},
+		{
+			name: "поиск несуществующего элемента",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+				{Message: "commit 2", UUID: "uuid2", Date: "2021-01-02"},
+				{Message: "commit 3", UUID: "uuid3", Date: "2021-01-03"},
+			},
+			message: "commit 4",
+			want:    "",
+		},
+		{
+			name: "поиск элемента в начале списка",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+				{Message: "commit 2", UUID: "uuid2", Date: "2021-01-02"},
+				{Message: "commit 3", UUID: "uuid3", Date: "2021-01-03"},
+			},
+			message: "commit 1",
+			want:    "commit 1",
+		},
+		{
+			name: "поиск элемента в конце списка",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+				{Message: "commit 2", UUID: "uuid2", Date: "2021-01-02"},
+				{Message: "commit 3", UUID: "uuid3", Date: "2021-01-03"},
+			},
+			message: "commit 3",
+			want:    "commit 3",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := &DoubleLinkedList{}
+			d.Init(tt.commits)
+
+			result := d.Search(tt.message)
+			if result == nil && tt.want != "" {
+				t.Errorf("Search() = nil, ожидалось %v", tt.want)
+			}
+			if result != nil && result.data.Message != tt.want {
+				t.Errorf("Search() = %v, ожидалось %v", result.data.Message, tt.want)
+			}
+		})
+	}
+}
+
+func TestDoubleLinkedList_Reverse(t *testing.T) {
+	tests := []struct {
+		name    string
+		commits []Commit
+		want    []string // UUIDs в обратном порядке
+	}{
+
+		{
+			name: "список с одним элементом",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+			},
+			want: []string{"uuid1"},
+		},
+		{
+			name: "список с несколькими элементами",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+				{Message: "commit 2", UUID: "uuid2", Date: "2021-01-02"},
+				{Message: "commit 3", UUID: "uuid3", Date: "2021-01-03"},
+			},
+			want: []string{"uuid3", "uuid2", "uuid1"},
+		},
+		{
+			name: "список с несколькими элементами и повторениями",
+			commits: []Commit{
+				{Message: "commit 1", UUID: "uuid1", Date: "2021-01-01"},
+				{Message: "commit 2", UUID: "uuid2", Date: "2021-01-02"},
+				{Message: "commit 2", UUID: "uuid2", Date: "2021-01-02"},
+				{Message: "commit 3", UUID: "uuid3", Date: "2021-01-03"},
+			},
+			want: []string{"uuid3", "uuid2", "uuid2", "uuid1"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := &DoubleLinkedList{}
+			d.Init(tt.commits)
+
+			reversed := d.Reverse()
+
+			// Проверяем UUID в обратном порядке
+			var got []string
+			node := reversed.head
+			for node != nil {
+				got = append(got, node.data.UUID)
+				node = node.next
+			}
+
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Reverse() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
