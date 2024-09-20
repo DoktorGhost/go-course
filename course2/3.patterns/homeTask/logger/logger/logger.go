@@ -22,36 +22,35 @@ const (
 	ColorRed    = "\033[31m"
 )
 
-type Logger struct {
+type _logger struct {
 	logger *log.Logger
 	level  int
 }
 
-var once sync.Once
+var (
+	once           sync.Once
+	singleInstance *_logger
+)
 
-var singleInstance *Logger
-
-func GetInstance() *Logger {
+func Init() {
 	if singleInstance == nil {
-		once.Do(
-			func() {
-				singleInstance = &Logger{
-					logger: log.New(os.Stdout, "", log.Ldate|log.Ltime),
-					level:  INFO,
-				}
-				message := fmt.Sprintf("Успешное создание логгера")
-				singleInstance.logMessage(ColorYellow, "INFO", message)
-			})
+		once.Do(func() {
+			singleInstance = &_logger{
+				logger: log.New(os.Stdout, "", log.Ldate|log.Ltime),
+				level:  INFO,
+			}
+			message := fmt.Sprintf("Успешное создание логгера")
+			singleInstance.logMessage(ColorYellow, "INFO", message)
+		})
 	} else {
 		message := fmt.Sprintf("Логгер был создан ранее")
 		singleInstance.logMessage(ColorYellow, "INFO", message)
 	}
 
-	return singleInstance
 }
 
-func (l *Logger) SetLevel(level int) {
-	l.level = level
+func SetLevel(level int) {
+	singleInstance.level = level
 	levelName := "INFO"
 	if level == 0 {
 		levelName = "DEBUG"
@@ -59,29 +58,29 @@ func (l *Logger) SetLevel(level int) {
 		levelName = "ERROR"
 	}
 	message := fmt.Sprintf("Установлен уровень логирования: %s", levelName)
-	l.logMessage(ColorYellow, "INFO", message)
+	singleInstance.logMessage(ColorYellow, "INFO", message)
 }
 
 // функция для вывода логов с цветом
-func (l *Logger) logMessage(color string, level string, message string) {
+func (l *_logger) logMessage(color string, level string, message string) {
 	l.logger.SetPrefix(fmt.Sprintf("%s[%s] %s", color, level, ColorReset))
 	l.logger.Println(message)
 }
 
-func (l *Logger) Debug(message string) {
-	if l.level == DEBUG {
-		l.logMessage(ColorGreen, "DEBUG", message)
+func Debug(message string) {
+	if singleInstance.level == DEBUG {
+		singleInstance.logMessage(ColorGreen, "DEBUG", message)
 	}
 }
 
-func (l *Logger) Info(message string) {
-	if l.level <= INFO {
-		l.logMessage(ColorYellow, "INFO", message)
+func Info(message string) {
+	if singleInstance.level <= INFO {
+		singleInstance.logMessage(ColorYellow, "INFO", message)
 	}
 }
 
-func (l *Logger) Error(message string) {
-	if l.level <= ERROR {
-		l.logMessage(ColorRed, "ERROR", message)
+func Error(message string) {
+	if singleInstance.level <= ERROR {
+		singleInstance.logMessage(ColorRed, "ERROR", message)
 	}
 }
