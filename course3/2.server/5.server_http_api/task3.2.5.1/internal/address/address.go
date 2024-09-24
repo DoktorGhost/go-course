@@ -9,7 +9,7 @@ import (
 	"github.com/ekomobile/dadata/v2/client"
 	"net/http"
 	"net/url"
-	"student.vkusvill.ru/samsonov/go-course/course3/2.server/5.server_http_api/task3.2.5.1/entity"
+	"task3.2.5.1/internal/entity"
 )
 
 type GeoService struct {

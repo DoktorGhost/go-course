@@ -1,0 +1,105 @@
+definitions:
+  entity.Address:
+    properties:
+      city:
+        type: string
+      house:
+        type: string
+      lat:
+        type: string
+      lon:
+        type: string
+      street:
+        type: string
+    type: object
+  entity.GeocodeRequest:
+    properties:
+      lat:
+        type: string
+      lon:
+        type: string
+    type: object
+  entity.Response:
+    properties:
+      addresses:
+        items:
+          $ref: '#/definitions/entity.Address'
+        type: array
+    type: object
+  entity.SearchRequest:
+    properties:
+      query:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/address/geocode:
+    post:
+      consumes:
+      - application/json
+      description: Обрабатывает POST запросы для получения адреса по координатам.
+      parameters:
+      - description: Address Query
+        in: body
+        name: query
+        required: true
+        schema:
+          $ref: '#/definitions/entity.GeocodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Response'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получение адреса по координатам
+      tags:
+      - Поиск по координатам
+  /api/address/search:
+    post:
+      consumes:
+      - application/json
+      description: Обрабатывает POST запросы для поиска адресов.
+      parameters:
+      - description: Address Query
+        in: body
+        name: query
+        required: true
+        schema:
+          $ref: '#/definitions/entity.SearchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Response'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Поиск по адресу
+      tags:
+      - Поиск по адресу
+swagger: "2.0"
