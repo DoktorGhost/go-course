@@ -9,7 +9,6 @@ import (
 	"github.com/ekomobile/dadata/v2/client"
 	"net/http"
 	"net/url"
-	"task3.2.5.1/internal/entity"
 )
 
 type GeoService struct {
@@ -40,8 +39,8 @@ func NewGeoService(apiKey, secretKey string) *GeoService {
 	}
 }
 
-func (g *GeoService) AddressSearch(input entity.SearchRequest) (entity.Response, error) {
-	var result entity.Response
+func (g *GeoService) AddressSearch(input SearchRequest) (Response, error) {
+	var result Response
 	rawRes, err := g.api.Address(context.Background(), &suggest.RequestParams{Query: input.Query})
 	if err != nil {
 		return result, err
@@ -51,14 +50,14 @@ func (g *GeoService) AddressSearch(input entity.SearchRequest) (entity.Response,
 		if r.Data.City == "" || r.Data.Street == "" {
 			continue
 		}
-		result.Addresses = append(result.Addresses, &entity.Address{City: r.Data.City, Street: r.Data.Street, House: r.Data.House, Lat: r.Data.GeoLat, Lon: r.Data.GeoLon})
+		result.Addresses = append(result.Addresses, &Address{City: r.Data.City, Street: r.Data.Street, House: r.Data.House, Lat: r.Data.GeoLat, Lon: r.Data.GeoLon})
 	}
 
 	return result, nil
 }
 
-func (g *GeoService) GeoCode(input entity.GeocodeRequest) (entity.Response, error) {
-	var result entity.Response
+func (g *GeoService) GeoCode(input GeocodeRequest) (Response, error) {
+	var result Response
 
 	httpClient := &http.Client{}
 
@@ -82,7 +81,7 @@ func (g *GeoService) GeoCode(input entity.GeocodeRequest) (entity.Response, erro
 		return result, err
 	}
 
-	var geoCode entity.GeoCode
+	var geoCode GeoCode
 
 	err = json.NewDecoder(resp.Body).Decode(&geoCode)
 	if err != nil {
@@ -90,7 +89,7 @@ func (g *GeoService) GeoCode(input entity.GeocodeRequest) (entity.Response, erro
 	}
 
 	for _, r := range geoCode.Suggestions {
-		var address entity.Address
+		var address Address
 		address.City = r.Data.City
 		address.Street = r.Data.Street
 		address.House = r.Data.House

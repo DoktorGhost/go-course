@@ -1,4 +1,4 @@
-package entity
+package address
 
 type SearchRequest struct {
 	Query string `json:"query"`
