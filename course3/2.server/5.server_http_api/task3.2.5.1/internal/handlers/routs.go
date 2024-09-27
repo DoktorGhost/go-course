@@ -8,7 +8,7 @@ import (
 	"httpapi/internal/auth"
 )
 
-func SetupRoutes(geoService *address.GeoService, authUseCase *auth.AuthUseCase) *chi.Mux {
+func SetupRoutes(geoService address.GeoUseCase, authUseCase *auth.AuthUseCase) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Group(func(r chi.Router) {

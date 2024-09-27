@@ -18,7 +18,7 @@ import (
 // @Failure 500 {object} map[string]string
 // @Router /api/address/search [post]
 // @Security BearerAuth
-func handleSearch(geoService *address.GeoService) http.HandlerFunc {
+func handleSearch(geoService address.GeoUseCase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
@@ -33,7 +33,7 @@ func handleSearch(geoService *address.GeoService) http.HandlerFunc {
 		}
 		defer r.Body.Close()
 
-		resp, err := geoService.AddressSearch(req)
+		resp, err := geoService.SearchAddress(req)
 		if err != nil {
 			http.Error(w, "Service is not responding: "+err.Error(), http.StatusInternalServerError)
 			return
@@ -56,7 +56,7 @@ func handleSearch(geoService *address.GeoService) http.HandlerFunc {
 // @Failure 500 {object} map[string]string
 // @Router /api/address/geocode [post]
 // @Security BearerAuth
-func handleGeocode(geoService *address.GeoService) http.HandlerFunc {
+func handleGeocode(geoService address.GeoUseCase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
@@ -71,7 +71,7 @@ func handleGeocode(geoService *address.GeoService) http.HandlerFunc {
 		}
 		defer r.Body.Close()
 
-		resp, err := geoService.GeoCode(req)
+		resp, err := geoService.PerformGeocode(req)
 		if err != nil {
 			http.Error(w, "Service is not responding: "+err.Error(), http.StatusInternalServerError)
 			return

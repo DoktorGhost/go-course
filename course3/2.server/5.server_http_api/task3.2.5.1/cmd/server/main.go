@@ -32,9 +32,10 @@ func main() {
 	authUseCase := auth.NewAuthUseCase(store, cfg.SecretKeyJWT)
 
 	//экземпляр геосервиса
-	geoService := address.NewGeoService(cfg.ApiKeyValue, cfg.SecretKeyValue)
+	geoService := address.NewGeoUseCase(address.NewGeoService(cfg.ApiKeyValue, cfg.SecretKeyValue))
+	//geoService := address.NewGeoService(cfg.ApiKeyValue, cfg.SecretKeyValue)
 
-	r := handlers.SetupRoutes(geoService, authUseCase)
+	r := handlers.SetupRoutes(*geoService, authUseCase)
 
 	http.ListenAndServe(":8080", r)
 }

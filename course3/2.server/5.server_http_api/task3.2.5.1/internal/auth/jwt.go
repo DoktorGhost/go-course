@@ -10,7 +10,7 @@ import (
 func GenerateJWT(username string, tokenAuth *jwtauth.JWTAuth) (string, error) {
 	_, tokenString, err := tokenAuth.Encode(jwt.MapClaims{
 		"username": username,
-		"exp":      time.Now().Add(time.Hour * 72).Unix(),
+		"exp":      time.Now().Add(time.Minute * 5).Unix(),
 	})
 	return tokenString, err
 }
