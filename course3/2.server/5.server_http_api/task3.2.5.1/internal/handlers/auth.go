@@ -79,11 +79,6 @@ func handleRegister(uc *auth.AuthUseCase) http.HandlerFunc {
 			return
 		}
 
-		//////////////////////////////
-		//проверка Shutdown
-		//time.Sleep(10 * time.Second)
-		//////////////////////////////
-
 		// Успешная регистрация
 		w.WriteHeader(http.StatusCreated)
 		response := map[string]string{"message": "Registration successful"}
