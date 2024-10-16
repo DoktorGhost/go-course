@@ -16,7 +16,7 @@ services:
       - REDIS_PORT=6379
       - API_KEY=1d3b2a6c5330e1c6621cbf25ede1332a82df89bc
       - SECRET_KEY=5453123054eafc1d0afe05464a95af40d34a23c1
-      - RPC_PROTOCOL=json-rpc
+      - RPC_PROTOCOL=grpc
     depends_on:
       - postgres
       - prometheus
@@ -36,6 +36,13 @@ services:
       dockerfile: Dockerfile
     ports:
       - "1235:1235"
+
+  grpcgeo:
+    build:
+      context: ./pkg/grpcgeo
+      dockerfile: Dockerfile
+    ports:
+      - "1236:1236"
 
   postgres:
     image: postgres:13

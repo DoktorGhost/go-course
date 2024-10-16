@@ -13,5 +13,6 @@ WORKDIR /src
 COPY --from=app-builder /src/app .
 COPY --from=app-builder /src/.env .
 COPY --from=app-builder /src/schema.sql .
+COPY --from=app-builder /src/pkg/grpcgeo .
 
 CMD ["./app"]

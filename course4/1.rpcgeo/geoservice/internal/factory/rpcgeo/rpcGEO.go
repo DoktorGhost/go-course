@@ -1,28 +1,27 @@
-package geojsonrpc
+package rpcgeo
 
 import (
 	"geoservice/internal/entities"
 	"geoservice/internal/metrics"
 	"log"
 	"net/rpc"
-	"net/rpc/jsonrpc"
 	"time"
 )
 
-type GeoServiceJsonRpc struct {
+type GeoServiceRpc struct {
 	Client *rpc.Client
 }
 
-func NewGeoService() *GeoServiceJsonRpc {
-	client, err := jsonrpc.Dial("tcp", "jsongeoapp:1235")
+func NewGeoService() *GeoServiceRpc {
+	client, err := rpc.Dial("tcp", "newgeoapp:1234")
 	if err != nil {
-		log.Println("Error connecting to json-RPC server:", err)
+		log.Println("Error connecting to RPC server:", err)
 		return nil
 	}
-	return &GeoServiceJsonRpc{client}
+	return &GeoServiceRpc{client}
 }
 
-func (g *GeoServiceJsonRpc) AddressSearch(input entities.SearchRequest) (entities.Response, error) {
+func (g *GeoServiceRpc) AddressSearch(input entities.SearchRequest) (entities.Response, error) {
 	start := time.Now()
 
 	var addressSearchResp entities.Response
@@ -39,7 +38,7 @@ func (g *GeoServiceJsonRpc) AddressSearch(input entities.SearchRequest) (entitie
 	return addressSearchResp, nil
 }
 
-func (g *GeoServiceJsonRpc) GeoCode(input entities.GeocodeRequest) (entities.Response, error) {
+func (g *GeoServiceRpc) GeoCode(input entities.GeocodeRequest) (entities.Response, error) {
 	start := time.Now()
 
 	var geoCodeResp entities.Response

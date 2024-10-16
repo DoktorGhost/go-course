@@ -3,8 +3,9 @@ package factory
 import (
 	"fmt"
 	"geoservice/internal/entities"
-	geojsonrpc "geoservice/internal/factory/jsonRPC"
-	georpc "geoservice/internal/factory/rpc"
+	"geoservice/internal/factory/grpcgeo"
+	"geoservice/internal/factory/jsonrpcgeo"
+	"geoservice/internal/factory/rpcgeo"
 )
 
 type GeoServiceRepository interface {
@@ -14,11 +15,13 @@ type GeoServiceRepository interface {
 
 func GetGeoServiceFactory(protocol string) (GeoServiceRepository, error) {
 	if protocol == "json-rpc" {
-		return geojsonrpc.NewGeoService(), nil
+		return jsonrpcgeo.NewGeoService(), nil
 	}
-
 	if protocol == "rpc" {
-		return georpc.NewGeoService(), nil
+		return rpcgeo.NewGeoService(), nil
+	}
+	if protocol == "grpc" {
+		return grpcgeo.NewGeoServiceGrpc(), nil
 	}
 
 	return nil, fmt.Errorf("No protocol")
