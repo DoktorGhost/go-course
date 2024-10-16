@@ -11,6 +11,7 @@ import (
 	"net"
 	"net/http"
 	"net/rpc"
+	"net/rpc/jsonrpc"
 	"net/url"
 )
 
@@ -65,6 +66,7 @@ type GeoProvider struct {
 func NewGeoProvider(apiKey, secretKey string) *GeoProvider {
 	endpointUrl, err := url.Parse("https://suggestions.dadata.ru/suggestions/api/4_1/rs/")
 	if err != nil {
+		log.Println("Error parsing endpoint url:", err)
 		return nil
 	}
 
@@ -86,7 +88,7 @@ func NewGeoProvider(apiKey, secretKey string) *GeoProvider {
 
 // AddressSearch метод для поиска адреса
 func (g *GeoProvider) AddressSearch(input AddressSearchRequest, resp *AddressSearchResponse) error {
-	log.Println("RPC. AddressSearch")
+	log.Println("JSON-RPC. AddressSearch")
 	rawRes, err := g.api.Address(context.Background(), &suggest.RequestParams{Query: input.Query})
 	if err != nil {
 		return err
@@ -104,7 +106,7 @@ func (g *GeoProvider) AddressSearch(input AddressSearchRequest, resp *AddressSea
 
 // GeoCode метод для геокодирования
 func (g *GeoProvider) GeoCode(input GeoCodeRequest, resp *GeoCodeResponse) error {
-	log.Println("RPC. GeoCode")
+	log.Println("JSON-RPC. GeoCode")
 
 	httpClient := &http.Client{}
 
@@ -167,21 +169,22 @@ func main() {
 		return
 	}
 
-	// Создание TCP слушателя на порту 1234
-	listener, err := net.Listen("tcp", ":1234")
+	// Создание TCP слушателя на порту 1235
+	listener, err := net.Listen("tcp", ":1235")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	defer listener.Close()
 
-	fmt.Println("Listening on port 1234...")
+	fmt.Println("Listening on port 1235...")
 	// Обработка входящих соединений
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
+			log.Println("Error accepting connection:", err)
 			continue
 		}
 		// Запуск нового горутины для обработки соединения
-		go rpc.ServeConn(conn)
+		go jsonrpc.ServeConn(conn)
 	}
 }

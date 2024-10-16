@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"geoservice/internal/address"
 	"geoservice/internal/cache"
 	"geoservice/internal/config"
+	"geoservice/internal/factory"
 	"geoservice/internal/handlers"
 	"geoservice/internal/metrics"
 	"geoservice/internal/services/geo_services"
@@ -17,7 +17,6 @@ import (
 	"log"
 	"net/http"
 	_ "net/http/pprof"
-	"net/rpc"
 	"os"
 )
 
@@ -74,16 +73,8 @@ func main() {
 
 	proxy := cache.NewSomeRepositoryProxy(&sr, redisClient)
 
-	//
-	client, err := rpc.Dial("tcp", "newgeoapp:1234")
-	if err != nil {
-		fmt.Println("Error connecting to RPC server:", err)
-		return
-	}
-	defer client.Close()
-
-	apiGeoService := address.GeoService{client}
-	apiGeoUsecase := address.NewGeoUseCase(&apiGeoService)
+	apiGeoService, err := factory.GetGeoServiceFactory(cfg.Protocol.Rpc_protocol)
+	apiGeoUsecase := address.NewGeoUseCase(apiGeoService)
 
 	r := handlers.SetupRoutes(apiGeoUsecase, gu, uc, proxy)
 
