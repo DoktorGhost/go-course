@@ -1,0 +1,71 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=dbname
+      - DB_LOGIN=admin
+      - DB_PASS=drowssap
+      - SECRET_KEY_JWT=aAbBcCdDeE123@
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - API_KEY=1d3b2a6c5330e1c6621cbf25ede1332a82df89bc
+      - SECRET_KEY=5453123054eafc1d0afe05464a95af40d34a23c1
+    depends_on:
+      - postgres
+      - prometheus
+      - grafana
+      - redis
+
+  newgeoapp:
+    build:
+      context: ./pkg/newGeo
+      dockerfile: Dockerfile
+    ports:
+      - "1234:1234"
+
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: dbname
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: drowssap
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
+

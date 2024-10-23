@@ -1,0 +1,323 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Гео-сервис",
+        "title": "Geo Service",
+        "contact": {},
+        "version": "0.1.0"
+    },
+    "paths": {
+        "/api/address/geocode": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Обрабатывает POST запросы для получения адреса по координатам.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "гео-сервис"
+                ],
+                "summary": "Получение адреса по координатам",
+                "parameters": [
+                    {
+                        "description": "Address Query",
+                        "name": "query",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entities.GeocodeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entities.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/address/search": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Обрабатывает POST запросы для поиска адресов.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "гео-сервис"
+                ],
+                "summary": "Поиск по адресу",
+                "parameters": [
+                    {
+                        "description": "Address Query",
+                        "name": "query",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entities.SearchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entities.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/login": {
+            "post": {
+                "description": "Логин пользователя и выдача JWT",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Логин",
+                "parameters": [
+                    {
+                        "description": "User Login Data",
+                        "name": "login",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entities.UserType"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/register": {
+            "post": {
+                "description": "Register a new user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Регистрация",
+                "parameters": [
+                    {
+                        "description": "User Registration Data",
+                        "name": "register",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entities.UserType"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/debug/pprof/": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает информацию о профилировании для приложения",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pprof"
+                ],
+                "summary": "Профилирование приложения",
+                "responses": {}
+            }
+        }
+    },
+    "definitions": {
+        "entities.Address": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string"
+                },
+                "house": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "lat": {
+                    "type": "string"
+                },
+                "lon": {
+                    "type": "string"
+                },
+                "street": {
+                    "type": "string"
+                }
+            }
+        },
+        "entities.GeocodeRequest": {
+            "type": "object",
+            "properties": {
+                "lat": {
+                    "type": "string"
+                },
+                "lon": {
+                    "type": "string"
+                }
+            }
+        },
+        "entities.Response": {
+            "type": "object",
+            "properties": {
+                "addresses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Address"
+                    }
+                }
+            }
+        },
+        "entities.SearchRequest": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string"
+                }
+            }
+        },
+        "entities.UserType": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

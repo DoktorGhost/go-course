@@ -1,0 +1,207 @@
+definitions:
+  entities.Address:
+    properties:
+      city:
+        type: string
+      house:
+        type: string
+      id:
+        type: integer
+      lat:
+        type: string
+      lon:
+        type: string
+      street:
+        type: string
+    type: object
+  entities.GeocodeRequest:
+    properties:
+      lat:
+        type: string
+      lon:
+        type: string
+    type: object
+  entities.Response:
+    properties:
+      addresses:
+        items:
+          $ref: '#/definitions/entities.Address'
+        type: array
+    type: object
+  entities.SearchRequest:
+    properties:
+      query:
+        type: string
+    type: object
+  entities.UserType:
+    properties:
+      id:
+        type: integer
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Гео-сервис
+  title: Geo Service
+  version: 0.1.0
+paths:
+  /api/address/geocode:
+    post:
+      consumes:
+      - application/json
+      description: Обрабатывает POST запросы для получения адреса по координатам.
+      parameters:
+      - description: Address Query
+        in: body
+        name: query
+        required: true
+        schema:
+          $ref: '#/definitions/entities.GeocodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.Response'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Получение адреса по координатам
+      tags:
+      - гео-сервис
+  /api/address/search:
+    post:
+      consumes:
+      - application/json
+      description: Обрабатывает POST запросы для поиска адресов.
+      parameters:
+      - description: Address Query
+        in: body
+        name: query
+        required: true
+        schema:
+          $ref: '#/definitions/entities.SearchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.Response'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Поиск по адресу
+      tags:
+      - гео-сервис
+  /api/login:
+    post:
+      consumes:
+      - application/json
+      description: Логин пользователя и выдача JWT
+      parameters:
+      - description: User Login Data
+        in: body
+        name: login
+        required: true
+        schema:
+          $ref: '#/definitions/entities.UserType'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Логин
+      tags:
+      - auth
+  /api/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user
+      parameters:
+      - description: User Registration Data
+        in: body
+        name: register
+        required: true
+        schema:
+          $ref: '#/definitions/entities.UserType'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Регистрация
+      tags:
+      - auth
+  /debug/pprof/:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает информацию о профилировании для приложения
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Профилирование приложения
+      tags:
+      - Pprof
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
