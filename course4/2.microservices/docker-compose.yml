@@ -1,0 +1,115 @@
+services:
+  user:
+    build:
+      context: ./user
+      dockerfile: Dockerfile
+    environment:
+      DB_HOST: dbuser
+      DB_PORT: 5432
+      DB_NAME: dbname
+      DB_LOGIN: admin
+      DB_PASS: drowssap
+      PROVIDER_PORT: 5000
+      HTTP_PROVIDER_PORT: 8080
+    deploy:
+      replicas: 3
+    networks:
+      - geo-network
+    depends_on:
+      - dbuser
+
+  dbuser:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: dbname
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: drowssap
+    networks:
+      - geo-network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  auth:
+    build:
+      context: ./auth
+      dockerfile: Dockerfile
+    environment:
+      USER_SERVICE_PORT: 5000
+      USER_SERVICE_HOST: user
+      PROVIDER_PORT: 5000
+      SECRET_KEY_JWT: secretKEYjwt
+      HTTP_PROVIDER_PORT: 8080
+    deploy:
+      replicas: 3
+    networks:
+      - geo-network
+    depends_on:
+      - user
+
+  geo:
+    build:
+      context: ./geo
+      dockerfile: Dockerfile
+    environment:
+      AUTH_SERVICE_PORT: 5000
+      AUTH_SERVICE_HOST: auth
+      DB_HOST: dbgeo
+      DB_PORT: 5432
+      DB_NAME: geodatabase
+      DB_LOGIN: admin2
+      DB_PASS: qwerty123
+      API_KEY: 1d3b2a6c5330e1c6621cbf25ede1332a82df89bc
+      API_SECRET: 5453123054eafc1d0afe05464a95af40d34a23c1
+      HTTP_PROVIDER_PORT: 8080
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    deploy:
+      replicas: 3
+    networks:
+      - geo-network
+
+    depends_on:
+      - dbgeo
+      - redis
+      - auth
+
+  dbgeo:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: geodatabase
+      POSTGRES_USER: admin2
+      POSTGRES_PASSWORD: qwerty123
+    networks:
+      - geo-network
+    volumes:
+      - geo_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:alpine
+    networks:
+      - geo-network
+    volumes:
+      - redis_data:/data
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - geo-network
+    depends_on:
+      - user
+      - auth
+      - geo
+
+networks:
+  geo-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  geo_data:
+

@@ -86,7 +86,7 @@ func NewGeoProvider(apiKey, secretKey string) *GeoProvider {
 
 // AddressSearch метод для поиска адреса
 func (g *GeoProvider) AddressSearch(input AddressSearchRequest, resp *AddressSearchResponse) error {
-	log.Println("AddressSearch")
+	log.Println("RPC. AddressSearch")
 	rawRes, err := g.api.Address(context.Background(), &suggest.RequestParams{Query: input.Query})
 	if err != nil {
 		return err
@@ -104,7 +104,7 @@ func (g *GeoProvider) AddressSearch(input AddressSearchRequest, resp *AddressSea
 
 // GeoCode метод для геокодирования
 func (g *GeoProvider) GeoCode(input GeoCodeRequest, resp *GeoCodeResponse) error {
-	log.Println("GeoCode")
+	log.Println("RPC. GeoCode")
 
 	httpClient := &http.Client{}
 
@@ -156,14 +156,14 @@ func main() {
 
 	gp := NewGeoProvider(apiKey, secretKey)
 	if gp == nil {
-		fmt.Println("Failed to create GeoProvider")
+		log.Println("Failed to create GeoProvider")
 		return
 	}
 
 	// Регистрация GeoProvider как RPC-сервиса
 	err := rpc.Register(gp)
 	if err != nil {
-		fmt.Println("Error registering GeoProvider:", err)
+		log.Println("Error registering GeoProvider:", err)
 		return
 	}
 

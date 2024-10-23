@@ -6,9 +6,10 @@ import (
 )
 
 type Config struct {
-	API    ApiConfig
-	DB     DataBaseConfig
-	Secret SecretConfig
+	API      ApiConfig
+	DB       DataBaseConfig
+	Secret   SecretConfig
+	Protocol Protocol
 }
 
 type ApiConfig struct {
@@ -28,6 +29,10 @@ type DataBaseConfig struct {
 
 type SecretConfig struct {
 	SecretKeyJWT string `env:"SECRET_KEY_JWT"`
+}
+
+type Protocol struct {
+	Rpc_protocol string `env:"RPC_PROTOCOL"`
 }
 
 // LoadConfig загружает конфигурацию из .env файла и возвращает структуру Config
