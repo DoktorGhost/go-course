@@ -1,4 +1,24 @@
 services:
+  proxy:
+    build:
+      context: ./proxy
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - geo-network
+    depends_on:
+      - user
+
+  notification:
+    build:
+      context: ./notification
+      dockerfile: Dockerfile
+    networks:
+      - geo-network
+    depends_on:
+      - user
+
   user:
     build:
       context: ./user
@@ -91,19 +111,6 @@ services:
     volumes:
       - redis_data:/data
 
-  nginx:
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
-    networks:
-      - geo-network
-    depends_on:
-      - user
-      - auth
-      - geo
-
 networks:
   geo-network:
     driver: bridge
@@ -113,3 +120,15 @@ volumes:
   redis_data:
   geo_data:
 
+#  nginx:
+#    build:
+#      context: ./nginx
+#      dockerfile: Dockerfile
+#    ports:
+#      - "8080:8080"
+#    networks:
+#      - geo-network
+#    depends_on:
+#      - user
+#      - auth
+#      - geo
