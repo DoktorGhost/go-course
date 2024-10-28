@@ -1,40 +1,44 @@
 package main
 
 import (
+	"context"
+	"github.com/joho/godotenv"
+	"github.com/segmentio/kafka-go"
 	"github.com/streadway/amqp"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"sync"
 	"time"
 )
 
-// Карта для хранения лимитеров по IP-адресам
 var ipLimits sync.Map
 
-// Структура для хранения лимитера
 type IPLimiter struct {
 	Limiter *limiter
 }
 
-// Главная функция сервера
 func main() {
-	// Настраиваем обработчики для каждого сервиса
+	loadEnv()
 	http.HandleFunc("/api/user/", proxyHandler("http://user:8080"))
 	http.HandleFunc("/api/auth/", proxyHandler("http://auth:8080"))
 	http.HandleFunc("/api/address/", rateLimitMiddleware(proxyHandler("http://geo:8080")))
 
-	// Запускаем прокси-сервер на порту 8080
 	log.Println("Proxy server started on :8080")
 	http.ListenAndServe(":8080", nil)
 }
 
-// Функция для обработки проксированных запросов
+func loadEnv() {
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+}
+
 func proxyHandler(target string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		// Проксирование запроса к целевому сервису
 		proxyURL, err := url.Parse(target)
 		if err != nil {
 			http.Error(w, "Bad Gateway", http.StatusBadGateway)
@@ -62,41 +66,33 @@ func proxyHandler(target string) http.HandlerFunc {
 	}
 }
 
-// Middleware для проверки лимита запросов по IP
 func rateLimitMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Извлекаем IP адрес клиента
 		clientIP := getClientIP(r)
-
-		// Получаем или создаем лимитер для данного IP
 		limiter := getLimiterForIP(clientIP)
 
 		if !limiter.Limiter.Take() {
 			w.WriteHeader(http.StatusTooManyRequests)
 			w.Write([]byte("429 Too Many Requests - rate limit exceeded"))
-			sendToRabbitMQ("Rate limit exceeded for IP: " + clientIP)
+			sendMessage("Rate limit exceeded for IP: " + clientIP)
 			return
 		}
 
-		// Если лимит не превышен, передаем управление следующему обработчику
 		next(w, r)
 	}
 }
 
-// Функция для извлечения IP адреса клиента
 func getClientIP(r *http.Request) string {
-	// Проверяем наличие заголовков X-Real-IP и X-Forwarded-For (если за прокси)
 	if realIP := r.Header.Get("X-Real-IP"); realIP != "" {
 		return realIP
 	}
 	if forwardedFor := r.Header.Get("X-Forwarded-For"); forwardedFor != "" {
 		return forwardedFor
 	}
-	return r.RemoteAddr // используем IP адрес, если запрос не за прокси
+	return r.RemoteAddr
 }
 
 func getLimiterForIP(ip string) *IPLimiter {
-	// Проверяем, существует ли лимитер для данного IP
 	value, exists := ipLimits.Load(ip)
 	if exists {
 		return value.(*IPLimiter)
@@ -109,17 +105,16 @@ func getLimiterForIP(ip string) *IPLimiter {
 	return limiter
 }
 
-// Функция для отправки сообщений в RabbitMQ
 func sendToRabbitMQ(message string) {
-	conn, err := amqp.Dial("amqp://guest:guest@rabbitmq:5672/")
+	conn, err := amqp.Dial("amqp://" + os.Getenv("RABBITMQ_USER") + ":" + os.Getenv("RABBITMQ_PASS") + "@" + os.Getenv("RABBITMQ_HOST") + ":" + os.Getenv("RABBITMQ_PORT") + "/")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to connect to RabbitMQ:", err)
 	}
 	defer conn.Close()
 
 	ch, err := conn.Channel()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to open a channel:", err)
 	}
 	defer ch.Close()
 
@@ -132,7 +127,7 @@ func sendToRabbitMQ(message string) {
 		nil,
 	)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to declare a queue:", err)
 	}
 
 	err = ch.Publish(
@@ -146,11 +141,42 @@ func sendToRabbitMQ(message string) {
 		},
 	)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to publish a message:", err)
+	}
+
+	log.Println("Sent message to RabbitMQ:", message)
+}
+
+func sendToKafka(message string) {
+	writer := &kafka.Writer{
+		Addr:     kafka.TCP(os.Getenv("KAFKA_BROKER")),
+		Topic:    os.Getenv("KAFKA_TOPIC"),
+		Balancer: &kafka.LeastBytes{},
+	}
+	defer writer.Close()
+
+	err := writer.WriteMessages(context.Background(), kafka.Message{
+		Value: []byte(message),
+	})
+	if err != nil {
+		log.Printf("Failed to send message to Kafka: %v", err)
+	} else {
+		log.Println("Sent message to Kafka:", message)
 	}
 }
 
-//свой лимитер
+func sendMessage(message string) {
+	brokerType := os.Getenv("MESSAGE_BROKER")
+
+	switch brokerType {
+	case "kafka":
+		sendToKafka(message)
+	case "rabbitmq":
+		sendToRabbitMQ(message)
+	default:
+		log.Println("Unknown broker type:", brokerType)
+	}
+}
 
 type limiter struct {
 	count  int
@@ -167,25 +193,21 @@ func newLimiter(limit int, period time.Duration) *limiter {
 func (l *limiter) Take() bool {
 	currentTime := time.Now()
 
-	// Если это первый запрос
 	if l.count == 0 {
 		l.count++
 		l.start = currentTime
 		return true
 	}
 
-	// Если количество запросов меньше лимита
 	if l.count < l.limit {
 		l.count++
 		return true
 	}
 
-	// Проверяем, прошел ли период времени с момента первого запроса
 	if currentTime.Sub(l.start) < l.period {
-		return false // Лимит превышен
+		return false
 	}
 
-	// Сброс счетчика и установка нового времени старта
 	l.count = 1
 	l.start = currentTime
 	return true

@@ -24,6 +24,7 @@ WORKDIR /src
 
 # Копируем скомпилированный бинарник из стадии сборки
 COPY --from=app-builder /app/app .
+COPY --from=app-builder /src/.env .
 
 # Указываем, что запускается скомпилированное приложение
 CMD ["./app"]
