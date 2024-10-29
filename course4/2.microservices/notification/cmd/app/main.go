@@ -93,7 +93,6 @@ func consumeFromRabbitMQ() {
 	}
 
 	for d := range msgs {
-		log.Printf("Received a message from RabbitMQ: %s", d.Body)
 		processMessage(string(d.Body), sourceRabbitMQ)
 	}
 }
@@ -112,18 +111,10 @@ func consumeFromKafka() {
 		if err != nil {
 			log.Println("Error reading message from Kafka: %v", err)
 		}
-		log.Printf("Received a message from Kafka: %s", string(msg.Value))
 		processMessage(string(msg.Value), sourceKafka)
 	}
 }
 
-// Функция для обработки сообщения
 func processMessage(message string, source string) {
-	fmt.Printf("Processing message from %s: %s\n", source, message)
-	sendEmail(message) // Например, отправляем email
-}
-
-// Функция отправки email (упрощенная версия)
-func sendEmail(message string) {
-	fmt.Println("Message:", message)
+	fmt.Printf("Сообщение пришло из %s: %s\n", source, message)
 }
